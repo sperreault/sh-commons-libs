@@ -1,5 +1,6 @@
 . ../test_lib.sh
 . ${COMMONS_BASEDIR}/lib/sh-commons.sh
+commons_load_module logger
 
 assert_true commons_logger_log INFO "Simple log message"
 assert_true commons_logger_log INFO "Simple log multi line \

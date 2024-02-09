@@ -47,21 +47,17 @@ commons_current_shell() {
 	fi
 }
 
-# commons_shell_is_posix() {
-# 	if [ $? -eq 1 ]; then
-# 		echo 0
-# 		return 0
-# 	else
-# 		if [ "${COMMONS_CURRENT_SHELL}" == "sh" ]; then
-# 			echo 0
-# 			return 0
-# 		else
-# 			echo 1
-# 			return 1
-# 		fi
-# 	fi
-# }
-#
+#######################################
+## Private function to define a pseudo
+## hash in Bourne shell
+## Arguments:
+##   String Variable Name
+##   String Multiple Key Value pairs
+## Outputs:
+##   None
+## Returns
+##  rc 0
+#######################################
 _commons_define_hash_sh() {
 	var_name=$1
 	shift
@@ -79,24 +75,58 @@ _commons_define_hash_sh() {
 			c=0
 		fi
 	done
+	return 0
 }
 
+#######################################
+## Private wrapper to define a hash
+## in Korn shell
+## Arguments:
+##   String Variable Name
+##   String Multiple Key Value pairs
+## Outputs:
+##   None
+## Returns
+##  rc 0
+#######################################
 _commons_define_hash_ksh() {
 	typeset -A ${var_name}
 	export ${var_name}
 	shift
 	_commons_define_hash_not_posix ${var_name} ${@}
-	return $?
+	return 0
 }
 
+#######################################
+## Private wrapper to define a hash
+## in Bourne Again shell
+## Arguments:
+##   String Variable Name
+##   String Multiple Key Value pairs
+## Outputs:
+##   None
+## Returns
+##  rc 0
+#######################################
 _commons_define_hash_bash() {
 	declare -a ${var_name}
 	export ${var_name}
 	shift
 	_commons_define_hash_not_posix ${var_name} ${@}
-	return $?
+	return 0
 }
 
+#######################################
+## Private function to define a hash
+## for not POSIX compliant shells
+## Arguments:
+##   String Variable Name
+##   String Multiple Key Value pairs
+## Outputs:
+##   None
+## Returns
+##  rc 0
+#######################################
 _commons_define_hash_not_posix() {
 	var_name=$1
 	c=0
@@ -114,36 +144,101 @@ _commons_define_hash_not_posix() {
 		fi
 	done
 	export ${var_name}
+	return 0
 }
 
+#######################################
+## Wrapper function for hash creation
+## works on POSIX and not POSIX compliant
+## shells
+## Arguments:
+##   String Variable Name
+##   String Multiple Key Value pairs
+## Outputs:
+##   None
+## Returns
+##  rc 0 If the right number of args are
+##  passed
+##     1 If you passed args that cannot
+##  be devided by 2
+#######################################
 commons_define_hash() {
 	var_name=$1
 	shift
 	if [ ${#}%2==0 ]; then
 		_commons_define_hash_${COMMONS_CURRENT_SHELL} ${var_name} ${@} && return 0 || return 1
+		return 0
 	else
 		echo "Your argument list $* can not be devided by 2"
 		return 1
 	fi
 }
 
+#######################################
+## Private function to get value out
+## of the pseudo hash on Bourne shell
+## VAR_KEY is the convention
+## Arguments:
+##   String Variable Name
+##   String Key
+## Outputs:
+##   String value
+## Returns
+##  rc from command
+#######################################
 _commons_get_hash_value_sh() {
 	v=${1}_${2}
 	echo ${!v}
 	return $?
 }
 
+#######################################
+## Private function to get value out
+## of a Bash shell hash
+## VAR[KEY] is the convention
+## Arguments:
+##   String Variable Name
+##   String Key
+## Outputs:
+##   String value
+## Returns
+##  rc from command
+#######################################
 _commons_get_hash_value_bash() {
 	echo ${1}[${2}]
 	return $?
 }
 
+#######################################
+## Private function to get value out
+## of a Korn shell hash
+## VAR[KEY] is the convention
+## Arguments:
+##   String Variable Name
+##   String Key
+## Outputs:
+##   String value
+## Returns
+##  rc from command
+#######################################
 _commons_get_hash_value_ksh() {
 	typeset -n v="${1}[${2}]"
 	echo ${v}
 	return $?
 }
 
+#######################################
+## Function to get value out hashes
+## defined with commons_define_hash
+## Arguments:
+##   String Variable Name
+##   String Key
+## Outputs:
+##   String value
+## Returns
+##  rc 0 for success
+##     1 for failure
+#######################################
 commons_get_hash_value() {
 	v=$(_commons_get_hash_value_${COMMONS_CURRENT_SHELL} $@)
 	if [ "${v}" == "" ]; then
@@ -304,7 +399,7 @@ commons_cleanup() {
 ## Arguments:
 ##   None
 ## Returns
-##   rc from commons_load_module logger
+##   rc 0
 ########################################
 commons_init() {
 	trap commons_cleanup EXIT
@@ -313,8 +408,8 @@ commons_init() {
 	export COMMONS_LOADED_MODULES
 	export COMMONS_CURRENT_SHELL
 	export COMMONS_BASEDIR
-	commons_load_module logger
-	return $?
+	#commons_load_module logger
+	return 0
 }
 
 #######################################
