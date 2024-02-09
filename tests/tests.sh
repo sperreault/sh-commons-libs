@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/bin/sh
 
 _TEST_DIR=$(dirname ${PWD}/${0})
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env ksh
-#
-#
 COMMONS_LOGGER_LOG_FORMAT=${COMMONS_LOGGER_LOG_FORMAT:-RAW}
 # Possible Values
 # RAW or raw

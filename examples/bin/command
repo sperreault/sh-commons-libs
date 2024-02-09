@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/bin/sh
 COMMONS_BASEDIR=/usr/local
 source ${COMMONS_BASEDIR}/lib/sh-commons.sh
 
