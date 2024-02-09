@@ -14,13 +14,8 @@ COMMONS_LOGGER_LOG_LEVEL=${COMMONS_LOGGER_LOG_LEVEL:-INFO}
 # INFO <- Default
 # DEBUG
 # TRACE
-typeset -A COMMONS_LOGGER_LOG_NLEVEL
-COMMONS_LOGGER_LOG_NLEVEL[TRACE]=6
-COMMONS_LOGGER_LOG_NLEVEL[DEBUG]=5
-COMMONS_LOGGER_LOG_NLEVEL[INFO]=4
-COMMONS_LOGGER_LOG_NLEVEL[WARN]=3
-COMMONS_LOGGER_LOG_NLEVEL[ERROR]=2
-COMMONS_LOGGER_LOG_NLEVEL[FATAL]=1
+commons_define_hash COMMONS_LOGGER_LOG_NLEVEL TRACE 6 DEBUG 5 INFO 4 WARN 3 ERROR 2 FATAL 1 ||
+	commons_print_err "Your shell is not supported: ${COMMONS_CURRENT_SHELL}"
 
 commons_logger_format_raw() {
 	echo "${@}"
@@ -33,14 +28,15 @@ commons_logger_append_console() {
 }
 
 _get_nlevel() {
-	typeset level=$(commons_to_upper ${1})
-	typeset nlevel=${COMMONS_LOGGER_LOG_NLEVEL[${level}]}
+	level=$(commons_to_upper ${1})
+	nlevel=$(commons_get_hash_value COMMONS_LOGGER_LOG_NLEVEL ${level})
 	if [ "${nlevel}" == "" ]; then
-		nlevel=0
+		echo 0
 		return 1
+	else
+		echo ${nlevel}
+		return 0
 	fi
-	echo ${nlevel}
-	return $?
 }
 
 _get_current_nlevel() {
@@ -48,13 +44,14 @@ _get_current_nlevel() {
 }
 _commons_logger_log() {
 	if [ ${#} -ge 2 ]; then
-		typeset log_level=${1}
-		typeset log_nlevel=$(_get_nlevel ${log_level})
-		typeset cur_nlevel=$(_get_current_nlevel)
+		log_level=${1}
+		log_nlevel=$(_get_nlevel ${log_level})
+		cur_nlevel=$(_get_current_nlevel)
 		if [ ${cur_nlevel} -ge ${log_nlevel} ]; then
-			typeset message=$(commons_logger_format_${COMMONS_LOGGER_LOG_FORMAT} "${@}")
+			message=$(commons_logger_format_${COMMONS_LOGGER_LOG_FORMAT} "${@}")
 			shift
 			commons_logger_append_${COMMONS_LOGGER_LOG_APPENDER} ${message}
+			return 0
 		fi
 		return 1
 	else
@@ -65,11 +62,11 @@ _commons_logger_log() {
 
 commons_logger_log() {
 	if [ ${#} -ge 2 ]; then
-		typeset log_level=$(commons_to_lower ${1})
-		typeset log_nlevel=$(_get_nlevel ${log_level})
-		typeset logger=commons_logger_log_${log_level}
+		log_level=$(commons_to_lower ${1})
+		log_nlevel=$(_get_nlevel ${log_level})
+		logger=commons_logger_log_${log_level}
 		shift
-		if [ "${log_nlevel}" -eq "0" ]; then
+		if [ "${log_nlevel}" == "0" ]; then
 			commons_logger_log_error "$(commons_to_upper ${log_level}) is not a valid commons_logger log_level, defaulting to ERROR"
 			logger=commons_logger_log_error
 		fi

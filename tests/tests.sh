@@ -2,18 +2,18 @@
 
 _TEST_DIR=$(dirname ${PWD}/${0})
 
+SHELLS="sh bash ksh"
+
 run_test() {
 	typeset mod=${1}
 	echo "== Starting tests for ${mod} =="
 	cd ${mod}
 	for i in *; do
+		f=$(basename -- "${i}")
+		e="${f##*.}"
 		echo "=== Running test ${i} ==="
-		./${i}
-		if [ $? -gt 0 ]; then
-			echo "=== FAILED ==="
-		else
-			echo "=== SUCCESS ==="
-		fi
+		$(command -v ${e}) ${i}
+		echo "=== ${i} Done ==="
 	done
 	cd ..
 	echo "== Ending tests for ${mod} =="
