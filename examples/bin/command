@@ -1,0 +1,14 @@
+#!/usr/bin/env ksh
+COMMONS_BASEDIR=/usr/local
+source ${COMMONS_BASEDIR}/lib/sh-commons.sh
+
+commons_load_module cmd ${0}
+
+help() {
+	echo "$(commons_cmd_script_name ${COMMONS_CMD_BASE_CMD}) as the following sub-commands:"
+	commons_cmd_sub_commands
+}
+
+commons_cmd_run ${@}
+
+commons_cleanup
