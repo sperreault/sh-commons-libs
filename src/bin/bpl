@@ -1,0 +1,16 @@
+#!/bin/sh
+BPL_BASEDIR=@DESTDIR@
+. ${BPL_BASEDIR}/lib/bpl.sh
+
+load_module cmd ${0}
+
+help() {
+	echo "$(bpl_cmd_script_name ${BPL_CMD_BASE_CMD}) as the following sub-commands:"
+	bpl_cmd_sub_commands
+}
+
+run() {
+	help
+}
+
+bpl_cmd_run ${@}

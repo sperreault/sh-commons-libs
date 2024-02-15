@@ -1,0 +1,7 @@
+#!/bin/sh
+
+bpl_load_module utils
+
+run() {
+	bpl_utils_update
+}

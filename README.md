@@ -1,7 +1,9 @@
-sh-commons-lib
+BPL.sh - Boiler Plate
 ==============
 
-sh-commons-lib provides standard functions that can be used in shell scripts.
+Boiler Plate for Shell (bpl) provides standard functions that can be used in 
+shell scripts.
+
 These functions range for standard error printing to logging.
 
 Why?
@@ -11,7 +13,7 @@ Over the years I've searched on the internet to many times to find ways to do XY
 
 Core concepts
 -------------
- - Supports sh, ksh and bash (Currently ksh is implemented)
+ - Supports sh, bash and ksh
  - Plugin support
  - Update support
  - Minimal requirements on tools other then the standard Unix tools

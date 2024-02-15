@@ -1,7 +1,0 @@
-#!/bin/sh
-
-commons_load_module utils
-
-run() {
-	commons_utils_update
-}

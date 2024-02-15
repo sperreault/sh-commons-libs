@@ -1,9 +1,25 @@
-COMMONS_NAME=sh-commons
-COMMONS_BASEDIR=${COMMONS_BASEDIR:-@DESTDIR@}
-COMMONS_SHAREDIR=${COMMONS_BASEDIR}/share/${COMMONS_NAME}
+#######################################
+## bpl - Common Shell Library
+##
+## Common Shell Library is meant to be
+## a common library that provided some
+## standard functions that could be used
+## in various shell scripts.
+## It currently aims at supporting the
+## following shells:
+## - Bourne Shell - sh
+## - Bourne Again Shell - bash
+## - Korn Shell - ksh
+#######################################
+
+BPL_NAME=bpl
+BPL_BASEDIR=${BPL_BASEDIR:-@DESTDIR@}
+BPL_SHAREDIR=${BPL_BASEDIR}/share/${BPL_NAME}
 
 #######################################
 ## Find out which shell we are using
+## Globals:
+##   BPL_CURRENT_SHELL
 ## Arguments:
 ##   None
 ## Outputs:
@@ -11,25 +27,40 @@ COMMONS_SHAREDIR=${COMMONS_BASEDIR}/share/${COMMONS_NAME}
 ## Returns
 ##  rc from command
 #######################################
-commons_current_shell() {
-	sh=$(ps -p $$ | grep $0 | awk '{print $4'})
-	fullpath=$(command -v $sh) || exit 1
-	ver=$($fullpath --version 2>&1)
-	retval=${?}
-	if [ ${retval} -eq 1 ]; then
-		# we assume bourne shell
-		echo "sh"
+current_shell() {
+	if [ ! -z ${BPL_CURRENT_SHELL+x} ]; then
+		echo ${BPL_CURRENT_SHELL}
 		return 0
 	else
-		# detect ksh
-		echo ${ver} | grep -q 93
-		if [ $? -eq 0 ]; then
-			echo "ksh"
-			return 0
-			#detect bash return sh if we are in POSIX compliance mode
+		ps=$(ps -p $$ -o command 2>&1) || (
+			bpl_print_err ${ps}
+			exit 1
+		)
+		sh=$(echo ${ps} | awk '{print $2}')
+		fullpath=$(command -v $sh) || exit 1
+		# are we a symlink
+		#symlink=$(command -v $(ls -l ${fullpath} | awk '{print $11}'))
+		ver=$($fullpath --version 2>&1)
+		retval=${?}
+		if [ ${retval} -gt 0 ]; then
+			# we assume bourne shell
+			case ${fullpath} in
+			*ash)
+				echo "not_supported"
+				return 1
+				;;
+			*sh)
+				echo "sh"
+				return 0
+				;;
+			*)
+				echo "not_supported"
+				return 1
+				;;
+			esac
 		else
-			echo ${ver} | grep -q bash
-			if [ $? -eq 0 ]; then
+			case "${ver}" in
+			*bash*)
 				declare -A >/dev/null 2>&1
 				if [ $? -eq 0 ]; then
 					echo "bash"
@@ -39,10 +70,16 @@ commons_current_shell() {
 					echo "sh"
 					return 0
 				fi
-			else
+				;;
+			*93*)
+				echo "ksh"
+				return 0
+				;;
+			*)
 				echo "not_supported"
 				return 1
-			fi
+				;;
+			esac
 		fi
 	fi
 }
@@ -58,7 +95,7 @@ commons_current_shell() {
 ## Returns
 ##  rc 0
 #######################################
-_commons_define_hash_sh() {
+_bpl_define_hash_sh() {
 	var_name=$1
 	shift
 	c=0
@@ -89,11 +126,11 @@ _commons_define_hash_sh() {
 ## Returns
 ##  rc 0
 #######################################
-_commons_define_hash_ksh() {
+_bpl_define_hash_ksh() {
 	typeset -A ${var_name}
 	export ${var_name}
 	shift
-	_commons_define_hash_not_posix ${var_name} ${@}
+	_bpl_define_hash_not_posix ${var_name} ${@}
 	return 0
 }
 
@@ -108,11 +145,11 @@ _commons_define_hash_ksh() {
 ## Returns
 ##  rc 0
 #######################################
-_commons_define_hash_bash() {
-	declare -a ${var_name}
+_bpl_define_hash_bash() {
+	declare -A ${var_name}
 	export ${var_name}
 	shift
-	_commons_define_hash_not_posix ${var_name} ${@}
+	_bpl_define_hash_not_posix ${var_name} ${@}
 	return 0
 }
 
@@ -127,7 +164,7 @@ _commons_define_hash_bash() {
 ## Returns
 ##  rc 0
 #######################################
-_commons_define_hash_not_posix() {
+_bpl_define_hash_not_posix() {
 	var_name=$1
 	c=0
 	k=""
@@ -162,11 +199,13 @@ _commons_define_hash_not_posix() {
 ##     1 If you passed args that cannot
 ##  be devided by 2
 #######################################
-commons_define_hash() {
+define_hash() {
 	var_name=$1
 	shift
 	if [ ${#}%2==0 ]; then
-		_commons_define_hash_${COMMONS_CURRENT_SHELL} ${var_name} ${@} && return 0 || return 1
+		# TODO: Use features from Bash and KSH
+		#_bpl_define_hash_${BPL_CURRENT_SHELL} ${var_name} ${@} && return 0 || return 1
+		_bpl_define_hash_sh ${var_name} ${@} && return 0 || return 1
 		return 0
 	else
 		echo "Your argument list $* can not be devided by 2"
@@ -186,10 +225,12 @@ commons_define_hash() {
 ## Returns
 ##  rc from command
 #######################################
-_commons_get_hash_value_sh() {
+_bpl_get_hash_value_sh() {
 	v=${1}_${2}
-	echo ${!v}
-	return $?
+	eval a=\$${v}
+	r=$?
+	echo ${a}
+	return ${r}
 }
 
 #######################################
@@ -204,9 +245,16 @@ _commons_get_hash_value_sh() {
 ## Returns
 ##  rc from command
 #######################################
-_commons_get_hash_value_bash() {
-	echo ${1}[${2}]
-	return $?
+_bpl_get_hash_value_bash() {
+	declare | grep $1
+	b=${a["$2"]}
+	if [ "$b" != "[${2}]" ]; then
+		echo ${a}
+		return 0
+	else
+		echo
+		return 1
+	fi
 }
 
 #######################################
@@ -221,7 +269,7 @@ _commons_get_hash_value_bash() {
 ## Returns
 ##  rc from command
 #######################################
-_commons_get_hash_value_ksh() {
+_bpl_get_hash_value_ksh() {
 	typeset -n v="${1}[${2}]"
 	echo ${v}
 	return $?
@@ -229,7 +277,7 @@ _commons_get_hash_value_ksh() {
 
 #######################################
 ## Function to get value out hashes
-## defined with commons_define_hash
+## defined with bpl_define_hash
 ## Arguments:
 ##   String Variable Name
 ##   String Key
@@ -239,9 +287,11 @@ _commons_get_hash_value_ksh() {
 ##  rc 0 for success
 ##     1 for failure
 #######################################
-commons_get_hash_value() {
-	v=$(_commons_get_hash_value_${COMMONS_CURRENT_SHELL} $@)
-	if [ "${v}" == "" ]; then
+get_hash_value() {
+	# TODO: Use features from Bash and KSH
+	#v=$(_bpl_get_hash_value_${BPL_CURRENT_SHELL} $@)
+	v=$(_bpl_get_hash_value_sh $@)
+	if [ -z "${v}" ]; then
 		echo ""
 		return 1
 	else
@@ -259,7 +309,7 @@ commons_get_hash_value() {
 ## Returns
 ##  rc from command
 ########################################
-commons_to_upper() {
+to_upper() {
 	echo $@ | tr "[:lower:]" "[:upper:]"
 	return $?
 }
@@ -273,7 +323,7 @@ commons_to_upper() {
 ## Returns
 ##  rc from command
 #######################################
-commons_to_lower() {
+to_lower() {
 	echo $@ | tr "[:upper:]" "[:lower:]"
 	return $?
 }
@@ -288,10 +338,22 @@ commons_to_lower() {
 ## Returns
 ##  rc from command
 #######################################
-commons_define_hash() {
-	name=$1
-	shift
-	eval "$name"='$value'
+# define_hash() {
+# 	name=$1
+# 	shift
+# 	eval "$name"='$value'
+# }
+
+print_info() {
+	local -i std_x_state=0
+	! ((std_DEBUG & 2)) && [[ "${-/x/}" != "${-}" ]] && set +o xtrace && std_x_state=1
+
+	std_DEBUG=1 __STDLIB_API_1_std::log "$(__STDLIB_API_1_std::colour 'INFO:  ')" "${*:-Unspecified message}"
+
+	((std_x_state)) && set -o xtrace
+
+	# Don't stomp on std_ERRNO
+	return 0
 }
 
 #######################################
@@ -303,7 +365,7 @@ commons_define_hash() {
 ## Returns
 ##  rc from command
 #######################################
-commons_print_err() {
+print_err() {
 	echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 	return $?
 }
@@ -317,7 +379,7 @@ commons_print_err() {
 ## Returns
 ##  rc from command
 #######################################
-commons_check_command() {
+check_command() {
 	if [ ${#} -eq 1 ]; then
 		command -v $1
 		return $?
@@ -329,8 +391,8 @@ commons_check_command() {
 #######################################
 ## Load modules
 ## Globals:
-##   COMMONS_LOADED_MODULES
-##   COMMONS_BASEDIR
+##   BPL_LOADED_MODULES
+##   BPL_BASEDIR
 ## Arguments:
 ##   Module name
 ##   Module parameters
@@ -338,33 +400,34 @@ commons_check_command() {
 ##   0 if all is good
 ##   1 if something is wrong
 ########################################
-commons_load_module() {
-	typeset mod=${1}
+load_module() {
+	mod=${1}
 	shift
-	if [[ ${COMMONS_LOADED_MODULES} =~ ${mod} ]]; then
+	$(echo ${BPL_LOADED_MODULES} | grep -q ${mod})
+	if [ $? -eq 0 ]; then
 		return 0
 	else
 		# Is it a core module
-		typeset mod_types="core plugins"
+		mod_types="core plugins"
 		for mod_type in ${mod_types}; do
-			test -d ${COMMONS_SHAREDIR}/${mod_type}/${mod} &&
-				source ${COMMONS_SHAREDIR}/core/${mod}/init.sh &&
+			test -d ${BPL_SHAREDIR}/${mod_type}/${mod} &&
+				. ${BPL_SHAREDIR}/core/${mod}/init.sh &&
 				break
 		done
 		if [ $? -eq 0 ]; then
-			commons_${mod}_init ${@}
+			${mod}_init ${@}
 			if [ $? -eq 0 ]; then
-				COMMONS_LOADED_MODULES="${COMMONS_LOADED_MODULES} ${mod}"
-				export COMMONS_LOADED_MODULES
+				BPL_LOADED_MODULES="${BPL_LOADED_MODULES} ${mod}"
+				export BPL_LOADED_MODULES
 				return 0
 			else
 				# let's try to unload
-				commons_${mod}_cleanup
-				commons_print_err "Module ${mod} could not be loaded"
+				${mod}_cleanup
+				print_err "Module ${mod} could not be loaded"
 				return 1
 			fi
 		else
-			(commons_print_err "Module ${mod} does not exist" &&
+			(print_err "Module ${mod} does not exist" &&
 				return 1)
 		fi
 	fi
@@ -373,65 +436,51 @@ commons_load_module() {
 #######################################
 ## Execute the cleanup at the end
 ## Globals:
-##   COMMONS_LOADED_MODULES
-##   COMMONS_BASEDIR
+##   BPL_LOADED_MODULES
+##   BPL_BASEDIR
 ## Arguments:
 ##   None
 ## Returns
 ##   0
 ########################################
-commons_cleanup() {
-	for mod in ${COMMONS_LOADED_MODULES}; do
-		if [ "${mod}" != "commons" ]; then
-			commons_${mod}_cleanup
+cleanup() {
+	for mod in ${BPL_LOADED_MODULES}; do
+		if [ "${mod}" != "bpl" ]; then
+			${mod}_cleanup
 		fi
 	done
-	unset COMMONS_BASEDIR
+	unset BPL_BASEDIR
 	return 0
 }
 
 #######################################
 ## Initialization
 ## Globals:
-##   COMMONS_LOADED_MODULES
-##   COMMONS_CURRENT_SHELL
-##   COMMONS_BASEDIR
+##   BPL_LOADED_MODULES
+##   BPL_CURRENT_SHELL
+##   BPL_BASEDIR
 ## Arguments:
 ##   None
 ## Returns
 ##   rc 0
 ########################################
-commons_init() {
-	trap commons_cleanup EXIT
-	COMMONS_LOADED_MODULES="commons"
-	COMMONS_CURRENT_SHELL=$(commons_current_shell)
-	export COMMONS_LOADED_MODULES
-	export COMMONS_CURRENT_SHELL
-	export COMMONS_BASEDIR
-	#commons_load_module logger
-	return 0
-}
-
-#######################################
-## Cleanup alias
-## Returns
-##   rc from common_cleanup
-########################################
-cleanup() {
-	commons_cleanup
-	return $?
-}
-
-#######################################
-## Initialization alias
-## Returns
-##   rc from commons_init
-########################################
 init() {
-	commons_init
-	return $?
+	BPL_CURRENT_SHELL=$(current_shell)
+	if [ $? -gt 0 ]; then
+		print_err ${BPL_CURRENT_SHELL}
+		exit 1
+		return 1
+	else
+		BPL_LOADED_MODULES="bpl"
+		export BPL_LOADED_MODULES
+		export BPL_CURRENT_SHELL
+		export BPL_BASEDIR
+		$BPL_CURRENT_SH
+		trap cleanup EXIT
+		return 0
+	fi
 }
 
-if [ -z "${COMMONS_LOADED_MODULES+x}" ]; then
-	commons_init
+if [ -z "${BPL_LOADED_MODULES+x}" ]; then
+	init
 fi

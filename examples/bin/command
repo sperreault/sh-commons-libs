@@ -1,11 +1,11 @@
 #!/bin/sh
-COMMONS_BASEDIR=/usr/local
-source ${COMMONS_BASEDIR}/lib/sh-commons.sh
+CSL_BASEDIR=/usr/local
+source ${CSL_BASEDIR}/lib/csl.sh
 
 commons_load_module cmd ${0}
 
 help() {
-	echo "$(commons_cmd_script_name ${COMMONS_CMD_BASE_CMD}) as the following sub-commands:"
+	echo "$(commons_cmd_script_name ${CSL_CMD_BASE_CMD}) as the following sub-commands:"
 	commons_cmd_sub_commands
 }
 

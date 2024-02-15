@@ -1,25 +1,25 @@
 #!/bin/sh
 set -x
 # For remote install this script should be run via curl:
-#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/sperreault/sh-commons-libs/master/tools/install.sh)" -d /usr/local
+#   sh -c "$(curl -fsSL https://raw.githubusercontent.com/sperreault/bpl-libs/master/tools/install.sh)" -d /usr/local
 # or via wget:
-#   sh -c "$(wget -qO- https://raw.githubusercontent.com/sperreault/sh-commons-libs/master/tools/install.sh)" -d /usr/local
+#   sh -c "$(wget -qO- https://raw.githubusercontent.com/sperreault/bpl-libs/master/tools/install.sh)" -d /usr/local
 # or via fetch:
-#   sh -c "$(fetch -o - https://raw.githubusercontent.com/sperreault/sh-commons-libs/master/tools/install.sh)" -d /usr/local
+#   sh -c "$(fetch -o - https://raw.githubusercontent.com/sperreault/bpl-libs/master/tools/install.sh)" -d /usr/local
 #
 # For local install this run this script from a cloned version of the main repository
 #   Using -d base directory for the installation
 #
-#   git clone https://github.com/sperreault/sh-commons-libs
-#   cd sh-commons-libs
+#   git clone https://github.com/sperreault/bpl-libs
+#   cd bpl-libs
 #   ./tools/install.sh local -d /usr/local
 #
 set -e
 
-COMMONS_NAME=sh-commons
+BPL_NAME=bpl
 
 # Default settings
-REPO=${REPO:-sperreault/sh-commons-libs}
+REPO=${REPO:-sperreault/bpl-libs}
 REMOTE=${REMOTE:-https://github.com/${REPO}.git}
 BRANCH=${BRANCH:-main}
 
@@ -30,7 +30,7 @@ usage() {
 
 test_install() {
 	local dir=$1
-	mkdir -p ${dir}/share/${COMMONS_NAME} &&
+	mkdir -p ${dir}/share/${BPL_NAME} &&
 		mkdir -p ${dir}/lib &&
 		mkdir -p ${dir}/bin
 	if [ $? -ne 0 ]; then
@@ -60,7 +60,7 @@ remote_git_install() {
 	echo "Using remote git installation method"
 	local dest_dir=${1}
 	test_install ${dest_dir}
-	TMPDIR=/tmp/${COMMONS_NAME}-1234
+	TMPDIR=/tmp/${BPL_NAME}-1234
 	git init --quiet "${TMPDIR}" && cd "${TMPDIR}" &&
 		git config core.eol lf &&
 		git config core.autocrlf false &&
@@ -74,7 +74,7 @@ remote_git_install() {
 			cd -
 			rm -rf "${TMPDIR}" 2>/dev/null
 		}
-		fmt_error "git clone of ${COMMONS_NAME} repo failed"
+		fmt_error "git clone of ${BPL_NAME} repo failed"
 		exit 1
 	}
 	perform_install ${TMPDIR} ${dest_dir}

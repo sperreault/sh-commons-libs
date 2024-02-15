@@ -1,0 +1,42 @@
+= csl(1)
+Sebastien Perreault
+v1.0.0
+:doctype: manpage
+:manmanual: CSL
+:mansource: CSL
+:man-linkstyle: pass:[blue R < >]
+
+== Name
+
+csl - a standard library for shell scripts
+
+== Synopsis
+
+*csl* [_OPTION_]... _FILE_...
+
+== Options
+
+*-o, --out-file*=_OUT_FILE_::
+  Write result to file _OUT_FILE_.
+
+*-c, --capture*::
+  Capture specimen if it's a picture of a life form.
+
+== Exit status
+
+*0*::
+  Success.
+  Image is a picture of a life form.
+
+*1*::
+  Failure.
+  Image is not a picture of a life form.
+
+== Resources
+
+*Project web site:* https://eve.example.org
+
+== Copying
+
+Copyright (C) 2008 {author}. +
+Free use of this software is granted under the terms of the MIT License.

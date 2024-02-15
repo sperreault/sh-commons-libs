@@ -1,6 +1,6 @@
-commons_utils_update_git() {
+bpl_utils_update_git() {
 	typeset cmd=$1
-	cd ${COMMONS_SHAREDIR}
+	cd ${bpl_SHAREDIR}
   git init --quiet "$ZSH" && cd "$ZSH" \
   && git config core.eol lf \
   && git config core.autocrlf false \
@@ -22,32 +22,32 @@ commons_utils_update_git() {
   
 }
 
-commons_utils_update_curl() {
+bpl_utils_update_curl() {
 	return 1
 }
 
-commons_utils_update_wget() {
+bpl_utils_update_wget() {
 	return 1
 }
 
-_commons_utils_update_pre_checks() {
+_bpl_utils_update_pre_checks() {
 	(
-		touch ${COMMONS_SHAREDIR}/.tmp &&
-			rm ${COMMONS_SHAREDIR}/.tmp &&
+		touch ${bpl_SHAREDIR}/.tmp &&
+			rm ${bpl_SHAREDIR}/.tmp &&
 	) ||
 		(
-			commons_print_err "Cannot write to ${COMMONS_BASEDIR}/lib/${COMMONS_NAME}" &&
+			bpl_print_err "Cannot write to ${bpl_BASEDIR}/lib/${bpl_NAME}" &&
 				return 1
 		)
 }
 
-commons_utils_update() {
-	_commons_utils_update_pre_checks
+bpl_utils_update() {
+	_bpl_utils_update_pre_checks
 	if [ $? -eq 0 ]; then
-		(cmd=$(commons_check_command git) && commons_utils_update_git ${cmd}) ||
-			(cmd=$(commons_check_command curl) && commons_utils_update_curl ${cmd}) ||
-			(cmd=$(commons_check_command wget) && commons_utils_update_wget ${cmd}) ||
-			(commons_print_err "Cannot find git / curl or wget to perform the update" && return 1)
+		(cmd=$(bpl_check_command git) && bpl_utils_update_git ${cmd}) ||
+			(cmd=$(bpl_check_command curl) && bpl_utils_update_curl ${cmd}) ||
+			(cmd=$(bpl_check_command wget) && bpl_utils_update_wget ${cmd}) ||
+			(bpl_print_err "Cannot find git / curl or wget to perform the update" && return 1)
 	fi
 	return $?
 }
