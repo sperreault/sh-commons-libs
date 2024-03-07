@@ -10,9 +10,10 @@ BIN_SRCS := $(shell find src/bin -type f -name 'bpl*')
 BIN_BUILDS :=  $(patsubst src/%, build/%, $(BIN_SRCS))
 
 #TESTS := $(shell find tests/ -type f -name "*.*sh"
-TESTS := $(addsuffix .test, $(shell find tests -name "*.*sh"))
+TESTS_DEBIAN := $(addsuffix .debian_test, $(shell find tests -name "*.*sh"))
+TESTS = $(TESTS_DEBIAN)
 
-.PHONY: test all install clean 
+.PHONY: test all install clean docker-debian
 
 all: $(SH_BUILDS) $(BIN_BUILDS)
 
@@ -32,8 +33,13 @@ build/%.sh: src/%.sh
 .PHONY:
 test: $(TESTS)
 
-%.test:
-	BPL_BASEDIR=$(THIS_DIR)/build $(strip $(subst ., , $(suffix $(subst .test, , $@)))) $(basename $@)
+
+.PHONY:
+docker-debian:
+	docker build -t $(NAME)-debian:latest -f tests/Dockerfile.debian .
+
+tests/%.debian_test: docker-debian
+	docker run -t -v $(THIS_DIR):/ws -e BPL_BASEDIR=/ws/build  $(NAME)-debian:latest $(strip $(subst ., , $(suffix $(subst .debian_test, , $@)))) $(basename $@)
 
 install: $(SH_BUILDS) $(BIN_BUILDS)
 	$(foreach target,$(SH_BUILDS), mkdir -p $(subst build,$(DESTDIR),$(dir $(target))) && install -m 0755 $(target) $(subst build,$(DESTDIR),$(target));)

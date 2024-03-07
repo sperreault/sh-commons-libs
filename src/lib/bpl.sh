@@ -345,15 +345,8 @@ to_lower() {
 # }
 
 print_info() {
-	local -i std_x_state=0
-	! ((std_DEBUG & 2)) && [[ "${-/x/}" != "${-}" ]] && set +o xtrace && std_x_state=1
-
-	std_DEBUG=1 __STDLIB_API_1_std::log "$(__STDLIB_API_1_std::colour 'INFO:  ')" "${*:-Unspecified message}"
-
-	((std_x_state)) && set -o xtrace
-
-	# Don't stomp on std_ERRNO
-	return 0
+	echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] [ INFO ]: $*"
+	return $?
 }
 
 #######################################
@@ -366,8 +359,26 @@ print_info() {
 ##  rc from command
 #######################################
 print_err() {
-	echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+	echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] [ ERROR ]: $*" >&2
 	return $?
+}
+
+#######################################
+## List the available functions in the 
+## module. It removes _bpl as they are
+## treated as private functions.
+## Arguments:
+##   Module path
+## Outputs:
+##   List of all the functions
+## Returns
+##  rc from command
+#######################################
+list_functions () {
+  module = $1
+  if [ -f ${module} == "bpl" ]; then
+    functions=$(cat src/lib/bpl.sh| grep -v "^#" | grep "().{"  |grep -v _bpl | sed 's/()\ {//' | sort)
+  
 }
 
 #######################################
@@ -475,6 +486,7 @@ init() {
 		export BPL_LOADED_MODULES
 		export BPL_CURRENT_SHELL
 		export BPL_BASEDIR
+		export BPL_SHAREDIR
 		$BPL_CURRENT_SH
 		trap cleanup EXIT
 		return 0

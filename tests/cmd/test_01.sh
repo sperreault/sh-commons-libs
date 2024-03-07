@@ -6,4 +6,6 @@ tests_init $0
 echo "Loading the module"
 load_module cmd $0
 
+assert_equal $(basename $0) bpl_cmd_script_name $0
+
 tests_cleanup

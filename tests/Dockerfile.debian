@@ -1,0 +1,9 @@
+FROM debian:bookworm-slim
+
+RUN mkdir /ws
+RUN apt update -y && apt upgrade -y
+
+RUN apt install -y ksh bash ash procps make
+
+WORKDIR /ws
+

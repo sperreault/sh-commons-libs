@@ -1,5 +1,6 @@
 #!/bin/sh
-BPL_BASEDIR=@DESTDIR@
+BPL_BASEDIR=${BPL_BASEDIR:-@DESTDIR@}
+BPL_SHAREDIR=${BPL_BASEDIR}/share/${BPL_NAME}
 . ${BPL_BASEDIR}/lib/bpl.sh
 
 load_module cmd ${0}
